@@ -1,0 +1,23 @@
+{
+  "name": "firstjobserver",
+  "version": "1.0.0",
+  "description": "Servidor backend para la app first job.",
+  "main": "fjserver.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lobomacz/firstjobserver.git"
+  },
+  "author": "Marvin Cordoba",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/lobomacz/firstjobserver/issues"
+  },
+  "homepage": "https://github.com/lobomacz/firstjobserver#readme",
+  "dependencies": {
+    "express": "^4.16.4",
+    "mongodb": "^3.1.10"
+  }
+}
