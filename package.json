@@ -17,7 +17,10 @@
   },
   "homepage": "https://github.com/lobomacz/firstjobserver#readme",
   "dependencies": {
+    "assert": "^1.4.1",
     "express": "^4.16.4",
+    "firebase-admin": "^6.4.0",
+    "fs": "0.0.1-security",
     "mongodb": "^3.1.10"
   }
 }

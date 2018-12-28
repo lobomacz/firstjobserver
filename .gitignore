@@ -36,6 +36,11 @@ build/Release
 node_modules/
 jspm_packages/
 
+#Private directories
+sessions/
+users_data/
+publico/
+
 # TypeScript v1 declaration files
 typings/
 
