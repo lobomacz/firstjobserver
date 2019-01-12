@@ -4,7 +4,8 @@
   "description": "Servidor backend para la app first job.",
   "main": "fjserver.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node fjserver.js",
+    "debug": "DEBUG=express:* node fjserver.js"
   },
   "repository": {
     "type": "git",
@@ -18,6 +19,7 @@
   "homepage": "https://github.com/lobomacz/firstjobserver#readme",
   "dependencies": {
     "assert": "^1.4.1",
+    "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "firebase-admin": "^6.4.0",
     "fs": "0.0.1-security",
