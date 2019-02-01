@@ -120,6 +120,36 @@ app.get('/usuarios/sector/:sector', (req, res) => {
 
 });
 
+app.post('/usuarios/aplicantes', (req, res) => {
+
+	var _aplicantes = req.body.aplicantes;
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+			db.collection('usuarios').find({_id:{$in:_aplicantes}}).toArray((err, docs) => {
+				if(err){
+					console.error(err.message);
+					res.statusCode(404);
+				}
+
+				res.json({"datos":docs});
+				
+			});
+		}catch(e){
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+		}
+	});
+
+});
+
 app.post('/usuarios/nuevo', (req, res) => {
 
 	var obj = req.body.usuario;
@@ -237,6 +267,8 @@ app.post('/usuarios/perfil/cerrar', (req, res) => {
 	});
 });
 
+/*
+
 app.get('/usuarios/:idUsuario/documentos/:idDocumento', (req, res) => {
 	//PENDIENTE IMPLEMENTACION CON FILESYSTEM
 });
@@ -244,6 +276,8 @@ app.get('/usuarios/:idUsuario/documentos/:idDocumento', (req, res) => {
 app.post('/usuarios/:idUsuario/documentos/eliminar/:idDocumento', (req, res) => {
 	//PENDIENTE IMPLEMENTACION CON FILESYSTEM
 });
+
+*/
 
 app.post('/usuarios/:uid/img/upload', (req, res) => {
 	
@@ -319,6 +353,7 @@ app.get('/usuarios/:uid/img/:foto', (req, res) => {
 	}
 });
 
+/*
 app.get('/usuarios/img/:foto', (req, res) => {
 	
 	const dir = __dirname.concat(users_dir, 'img');
@@ -352,9 +387,12 @@ app.post('/usuarios/fotos/nuevo', (req, res) => {
 
 });
 
+
 app.post('/usuarios/:idUsuario/imagenes/eliminar/:idImagen', (req, res) => {
 	//PENDIENTE IMPLEMENTACION CON FILESYSTEM
 });
+
+*/
 
 app.get('/usuarios/:idUsuario/convocatorias', (req, res) => {
 
@@ -410,6 +448,209 @@ app.get('/usuarios/:idUsuario/convocatorias/nuevo/:idConvocatoria', (req, res) =
 
 
 });
+
+
+app.post('/usuarios/:uid/curriculum/upload', (req, res) => {
+	
+	let userId = req.params.uid;
+	let docFile = req.files.documento;
+	let fileName = docFile.name;
+
+	
+	let users_dirname = __dirname.concat(users_dir);
+	let user_file_dir = users_dirname.concat('/', userId, '/documentos');
+	let fileUrl = user_file_dir.concat('/', fileName)
+
+	if(!fs.existsSync(user_file_dir)){
+		fs.mkdir(user_file_dir, {recursive:true}, function(err) {
+			if(!err){
+				fs.appendFile(fileUrl, docFile.data, function(error) {
+					if(!error){
+						res.json({'count':1});
+					}else{
+						console.error(error.message);
+						res.sendStatus(404);
+					}
+				});
+			}
+		})
+	}else{
+		fs.appendFile(fileUrl, docFile.data, function(error) {
+			if(!error){
+				res.json({'count':1});
+			}else{
+				console.error(error.message);
+				res.sendStatus(404);
+			}
+		});
+	}
+
+});
+
+app.get('/usuarios/:uid/curriculum/:file', (req, res) => {
+
+	let _uid = req.params.uid;
+	let fileName = req.params.file;
+	let dir = __dirname.concat(users_dir, '/', _uid, '/documentos');
+	
+
+	if(!fs.existsSync(dir)){
+		console.error('Acceso a directorio que no existe.');
+		res.sendStatus(404);
+	}else{
+		let docFile = dir.concat('/', fileName);
+		res.sendFile(docFile);
+	}
+
+});
+
+app.post('/usuarios/:uid/curriculum/delete', (req, res) => {
+	let _uid = req.params.uid;
+	let fileName = req.body.documento;
+	let fileUrl = __dirname.concat(users_dir, '/', _uid, '/documentos/', fileName);
+	
+	if (fs.existsSync(fileUrl)) {
+		fs.unlink(fileUrl, function(err) {
+			if (!err) {
+				
+				res.json({'count':1});
+			}else{
+				console.error(error.message);
+				res.sendStatus(404);
+			}
+		})
+	}else{
+		console.error('Acceso a ruta no valida.');
+		res.sendStatus(404);
+	}
+});
+
+app.get('/usuarios/:uid/curriculum', (req, res) => {
+
+	let _uid = req.params.uid;
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('curriculums').findOne({_id:_uid}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json(r);
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+//Gestión de Curriculums de Usuarios
+
+app.post('/curriculums/nuevo', (req, res) => {
+	console.log('Insertar Curriculum');
+	var obj = req.body.curriculum;
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+			db.collection('curriculums').insertOne(obj, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({"count":r.insertedCount});
+			});
+		}catch(e){
+			console.error("Exception: ".concat(e.message));
+			res.sendStatus(404);
+		}
+		
+	});
+
+});
+
+app.post('/curriculums/actualizar/', (req, res) => {
+
+	var _uid = req.body.uid;
+	var _obj = req.body.curriculum;
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+			db.collection('curriculums').updateOne({_id:_uid},{$set:_obj}, {upsert:true},(err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.modifiedCount});
+			});
+		}catch(e){
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+		}
+	});
+
+});
+
+app.post('/curriculums/eliminar/', (req, res) => {
+
+	var _uid = req.body.uid;
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+			db.collection('curriculums').deleteOne({_id:_uid}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.statusCode(404);
+				}
+
+				res.json({"count":r.deletedCount});
+			});
+		}catch(e){
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+		}
+	});
+
+});
+
 
 //Gestion de Empleadores
 
@@ -741,42 +982,81 @@ app.post('/empleadores/:uid/img/delete', (req, res) => {
 	}
 });
 
-/*
-app.get('/empleadores/:idEmpleador/documentos/:idDocumento', (req, res) => {
+app.post('/empleadores/:uid/documento/upload', (req, res) => {
+	
+	let userId = req.params.uid;
+	let docFile = req.files.documento;
+	let fileName = docFile.name;
 
-});
+	
+	let employers_dirname = __dirname.concat(employers_dir);
+	let employer_file_dir = employers_dirname.concat('/', userId, '/documentos');
+	let fileUrl = employer_file_dir.concat('/', fileName)
 
-app.post('/empleadores/:idUsuario/documentos/eliminar/:idDocumento', (req, res) => {
-
-});
-
-
-app.get('/usuarios/:idUsuario/foto', (req, res) => {
-
-	const _uid = req.params.idUsuario;
-
-	client.connect((err, client) => {
-		assert.equal(null, err);
-
-		const db = client.db(dbName);
-
-		db.collection('usuarios').findOne({_id:_uid}, {fields:{'foto':1}}, (err, doc) => {
-			if(err != null){
-				console.error(err.message);
-				res.statusCode(404);
+	if(!fs.existsSync(employer_file_dir)){
+		fs.mkdir(employer_file_dir, {recursive:true}, function(err) {
+			if(!err){
+				fs.appendFile(fileUrl, docFile.data, function(error) {
+					if(!error){
+						res.json({'count':1});
+					}else{
+						console.error(error.message);
+						res.sendStatus(404);
+					}
+				});
 			}
-
-			res.json(doc);
-			client.close();
+		})
+	}else{
+		fs.appendFile(fileUrl, docFile.data, function(error) {
+			if(!error){
+				res.json({'count':1});
+			}else{
+				console.error(error.message);
+				res.sendStatus(404);
+			}
 		});
-	});
-
+	}
 
 });
-/*
-app.post('/usuarios/:idUsuario//eliminar/:idImagen', (req, res) => {
 
-});*/
+app.get('/empleadores/:uid/documento/:file', (req, res) => {
+
+	let _uid = req.params.uid;
+	let fileName = req.params.file;
+	let dir = __dirname.concat(employers_dir, '/', _uid, '/documentos');
+	
+
+	if(!fs.existsSync(dir)){
+		console.error('Acceso a directorio que no existe.');
+		res.sendStatus(404);
+	}else{
+		let docFile = dir.concat('/', fileName);
+		res.sendFile(docFile);
+	}
+
+});
+
+app.post('/empleadores/:uid/documento/delete', (req, res) => {
+	let _uid = req.params.uid;
+	let fileName = req.body.documento;
+	let fileUrl = __dirname.concat(employers_dir, '/', _uid, '/documentos/', fileName);
+	
+	if (fs.existsSync(fileUrl)) {
+		fs.unlink(fileUrl, function(err) {
+			if (!err) {
+				
+				res.json({'count':1});
+			}else{
+				console.error(error.message);
+				res.sendStatus(404);
+			}
+		})
+	}else{
+		console.error('Acceso a ruta no valida.');
+		res.sendStatus(404);
+	}
+});
+
 
 //Gestion de Plazas
 
@@ -846,7 +1126,7 @@ app.get('/plazas/abiertas', (req, res) => {
 
 });
 
-app.get('/plazas/:uid/abiertas', (req, res) => {
+app.get('/plazas/empleador/:uid/abiertas', (req, res) => {
 
 	let _uid = req.params.uid;
 
@@ -881,7 +1161,7 @@ app.get('/plazas/:uid/abiertas', (req, res) => {
 
 });
 
-app.get('/plazas/:uid', (req, res) => {
+app.get('/plazas/empleador/:uid', (req, res) => {
 
 	let _uid = req.params.uid;
 
@@ -902,6 +1182,78 @@ app.get('/plazas/:uid', (req, res) => {
 				}
 
 				res.json({'datos':docs});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+app.get('/plazas/:uid', (req, res) => {
+
+	let _uid = req.params.uid;
+	let oid = new ObjectId(_uid);
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('plazas').findOne({_id:oid}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json(r);
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+app.get('/plazas/:uid/aplicantes', (req, res) => {
+
+	let _uid = req.params.uid;
+	let oid = new ObjectId(_uid);
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('plazas').findOne({_id:oid}, {projection:{aplicantes:1,_id:0}}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'datos':r});
 			});
 
 		}catch(e){
@@ -1009,7 +1361,7 @@ app.post('/plazas/cerrar', (req, res) => {
 					res.sendStatus(404);
 				}
 
-				res.json({'count':r.updatedCount});
+				res.json({'count':r.modifiedCount});
 			});
 
 		}catch(e){
@@ -1027,6 +1379,7 @@ app.post('/plazas/cerrar', (req, res) => {
 app.post('/plazas/:id/aplicar', (req, res) => {
 
 	let _uid = req.body.uid;
+	
 
 	let oid = new ObjectId(req.params.id);
 
@@ -1040,13 +1393,14 @@ app.post('/plazas/:id/aplicar', (req, res) => {
 
 		try{
 
-			db.collection('plazas').updateOne({_id:oid}, {$push:{'aplicantes':_uid}}, {upsert:false}, (err, r) => {
+			db.collection('plazas').updateOne({_id:oid}, {$push:{'aplicantes':_uid}}, {upsert:true}, (err, r) => {
 				if(err != null){
 					console.error(err.message);
 					res.sendStatus(404);
 				}
+				console.log(r);
 
-				res.json({'count':r.updatedCount});
+				res.json({'count':r.modifiedCount});
 			});
 
 		}catch(e){
@@ -1083,7 +1437,7 @@ app.post('/plazas/:id/retirar', (req, res) => {
 					res.sendStatus(404);
 				}
 
-				res.json({'count':r.updatedCount});
+				res.json({'count':r.modifiedCount});
 			});
 
 		}catch(e){
@@ -1134,23 +1488,188 @@ app.get('/plazas/:id/usuario/:uid', (req, res) => {
 
 });
 
+//Gestion de Convocatorias
+
 app.get('/convocatorias/todas', (req, res) => {
+
 	client.connect((err, client) => {
-		assert.equal(null, err);
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
 
 		const db = client.db(dbName);
 
-		db.collection('convocatorias').find({}).toArray((err, docs) => {
-			if(err != null){
-				console.error(err.message);
-				res.statusCode(404);
-			}
+		try{
 
-			res.json({'datos':docs});
-			client.close();
-		});
+			db.collection('convocatorias').find({}).sort({'timeStamp':1}).toArray((err, docs) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'datos':docs});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
 	});
+
 });
+
+app.get('/convocatorias/fechas/:inicio/:final', (req, res) => {
+
+	let fInicio = req.params.inicio;
+	let fFinal = req.params.final;
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('convocatorias').find({$and:[{'fechaPublicacion':{$gt:fInicio}},{'fechaPublicacion':{$lt:fFinal}}]}).sort({'timeStamp':1}).toArray((err, docs) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'datos':docs});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+app.get('/convocatorias/:id', (req, res) => {
+
+	let _uid = req.params.id;
+	let oid = new ObjectId(_uid);
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('convocatorias').findOne({_id:oid}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json(r);
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+
+app.post('/convocatorias/nueva', (req, res) => {
+
+	let obj = req.body.convocatoria;
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('convocatorias').insertOne(obj, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.insertedCount});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+app.post('/convocatorias/:id/actualizar', (req, res) => {
+
+	let _uid = req.params.id;
+	let oid = new ObjectId(_uid);
+	let obj = req.body.convocatoria;
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('convocatorias').updateOne({_id:oid}, {$set:obj}, {upsert:false}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.updatedCount});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+
+/*
 
 app.get('/convocatorias/categoria/:idCategoria/abiertas', (req, res) => {
 
@@ -1260,7 +1779,7 @@ app.post('/convocatorias/:idConvocatoria/usuarios/nuevo/:idUsuario', (req, res) 
 /*
 app.post('/convocatorias/:idConvocatoria/documento/nuevo', (req, res) => {
 	
-});*/
+});
 
 app.get('/convocatorias/:idConvocatoria/documento/:idDocumento', (req, res) => {
 	
@@ -1332,10 +1851,12 @@ app.post('/convocatorias/eliminar/:idConvocatoria', (req, res) => {
 	});
 });
 
+*/
 
 
 //Gestion de Noticias
 
+/*
 app.get('/noticias/todas', (req, res) => {
 
 });
@@ -1367,6 +1888,9 @@ app.post('/noticias/editar/:idNoticia', (req, res) => {
 app.post('/noticias/eliminar/:idNoticia', (req, res) => {
 	
 });
+
+*/
+
 
 //
 
@@ -1524,6 +2048,63 @@ app.get('/etnias/:id', (req, res) => {
 
 		try{
 			db.collection("etnias").findOne({_id:o_id}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.statusCode(404);
+				}
+
+				res.json({'dato':r});
+			});
+		}catch(e){
+			console.error("Excepcion: ".concat(e.message));
+			res.statusCode(404);
+		}
+
+	});
+});
+
+app.get('/categorias', (req, res) => {
+	client.connect((err, client) => {
+		if(err){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName)
+
+		try{
+			db.collection("categorias").find({}).toArray((err, docs) => {
+				if(err != null){
+					console.error(err.message);
+					res.statusCode(404);
+				}
+
+				res.json({'datos':docs});
+			});
+		}catch(e){
+			console.error("Excepcion: ".concat(e.message));
+			res.statusCode(404);
+		}
+
+	});
+});
+
+
+app.get('/categorias/:id', (req, res) => {
+
+	const uid = req.params.id;
+	var o_id = new ObjectId(uid);
+
+	client.connect((err, client) => {
+		if(err){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName)
+
+		try{
+			db.collection("categorias").findOne({_id:o_id}, (err, r) => {
 				if(err != null){
 					console.error(err.message);
 					res.statusCode(404);

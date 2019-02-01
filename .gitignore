@@ -38,8 +38,9 @@ jspm_packages/
 
 #Private directories
 sessions/
-users_data/
+usuarios/
 publico/
+empleadores/
 
 # TypeScript v1 declaration files
 typings/
