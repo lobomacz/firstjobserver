@@ -8,9 +8,10 @@ const puerto = 3000;
 const fs = require('fs');
 const ObjectId = require('mongodb').ObjectId;
 
-var mw = require('./sessions/user-sessions.js');
+var mw = require('./sessions/user-sessions.js');//Middlewear para verificación de token de sesion firebase.
 var users_dir = '/usuarios/';
 var employers_dir = '/empleadores/';
+var public_dir = '/publico/';
 
 const MongoClient = require('mongodb').MongoClient;
 const assert = require('assert');
@@ -267,17 +268,6 @@ app.post('/usuarios/perfil/cerrar', (req, res) => {
 	});
 });
 
-/*
-
-app.get('/usuarios/:idUsuario/documentos/:idDocumento', (req, res) => {
-	//PENDIENTE IMPLEMENTACION CON FILESYSTEM
-});
-
-app.post('/usuarios/:idUsuario/documentos/eliminar/:idDocumento', (req, res) => {
-	//PENDIENTE IMPLEMENTACION CON FILESYSTEM
-});
-
-*/
 
 app.post('/usuarios/:uid/img/upload', (req, res) => {
 	
@@ -353,7 +343,7 @@ app.get('/usuarios/:uid/img/:foto', (req, res) => {
 	}
 });
 
-/*
+
 app.get('/usuarios/img/:foto', (req, res) => {
 	
 	const dir = __dirname.concat(users_dir, 'img');
@@ -370,29 +360,6 @@ app.get('/usuarios/img/:foto', (req, res) => {
 	}
 });
 
-app.post('/usuarios/fotos/nuevo', (req, res) => {
-
-	let _uid = req.params.idUsuario;
-	let foto = req.params.idImagen;
-	let dir = __dirname + users_dir;
-	let user_img_dir = dir.concat('/',uid,'/fotos');
-
-	if(!fs.existsSync(user_img_dir)){
-		fs.mkdir(user_img_dir, 0o750, (err) => {
-
-		});
-	}else{
-
-	}
-
-});
-
-
-app.post('/usuarios/:idUsuario/imagenes/eliminar/:idImagen', (req, res) => {
-	//PENDIENTE IMPLEMENTACION CON FILESYSTEM
-});
-
-*/
 
 app.get('/usuarios/:idUsuario/convocatorias', (req, res) => {
 
@@ -1669,229 +1636,6 @@ app.post('/convocatorias/:id/actualizar', (req, res) => {
 });
 
 
-/*
-
-app.get('/convocatorias/categoria/:idCategoria/abiertas', (req, res) => {
-
-	const _idCat = req.params.idCategoria;
-
-	client.connect((err, client) => {
-		assert.equal(null, err);
-
-		const db = client.db(dbName);
-
-		db.collection('convocatorias').find({'estado':'abierta','categoria':_idCat}).toArray((err, docs) => {
-			if(err != null){
-				console.error(err.message);
-				res.statusCode(404);
-			}
-
-			res.json({'datos':docs});
-			client.close();
-		});
-	});
-});
-
-app.get('/convocatorias/categoria/:idCategoria/todas', (req, res) => {
-
-	const _idCat = req.params.idCategoria;
-
-	client.connect((err, client) => {
-		assert.equal(null, err);
-
-		const db = client.db(dbName);
-
-		db.collection('convocatorias').find({'categoria':_idCat}).toArray((err, docs) => {
-			if(err != null){
-				console.error(err.message);
-				res.statusCode(404);
-			}
-
-			res.json({'datos':docs});
-			client.close();
-		});
-	});
-});
-
-app.get('/convocatorias/:idConvocatoria', (req, res) => {
-
-	const _idConv = req.params.idConvocatoria;
-
-	client.connect((err, client) => {
-		assert.equal(null, err);
-
-		const db = client.db(dbName);
-
-		db.collection('convocatorias').findOne({_id:_idConv}, (err, r) => {
-			if(err != null){
-				console.error(err.message);
-				res.statusCode(404);
-			}
-
-			res.json(r);
-			client.close();
-		});
-	});
-	
-});
-
-app.get('/convocatorias/:idConvocatoria/usuarios', (req, res) => {
-	const _idConv = req.params.idConvocatoria;
-
-	client.connect((err, client) => {
-		assert.equal(null, err);
-
-		const db = client.db(dbName);
-
-		db.collection('convocatorias').findOne({_id:_idConv}, {fields:{'usuarios':1}}, (err, r) => {
-			if(err != null){
-				console.error(err.message);
-				res.statusCode(404);
-			}
-
-			res.json({r});
-			client.close();
-		});
-	});
-});
-
-app.post('/convocatorias/:idConvocatoria/usuarios/nuevo/:idUsuario', (req, res) => {
-	const _idConv = req.params.idConvocatoria;
-	const _uid = req.params.idUsuario;
-
-	client.connect((err, client) => {
-		assert.equal(null, err, err.message);
-
-		const db = client.db(dbName);
-
-		db.collection('convocatorias').findOneAndUpdate({_id:_idConv}, {$push:{usuarios:_uid}}, {returnOriginal:false}, (err, r) => {
-			if(err != null){
-				console.error(err.message);
-				res.statusCode(404);
-			}
-
-			res.json(r);
-			client.close();
-		});
-	});
-});
-
-/*
-app.post('/convocatorias/:idConvocatoria/documento/nuevo', (req, res) => {
-	
-});
-
-app.get('/convocatorias/:idConvocatoria/documento/:idDocumento', (req, res) => {
-	
-});
-
-app.get('/convocatorias/:idConvocatoria/documento/eliminar/:idDocumento', (req, res) => {
-	
-});
-
-app.post('/convocatorias/nuevo', (req, res) => {
-
-	var obj = req.params.convocatoria;
-
-	client.connect((err, client) => {
-		assert.equal(null, err, err.message);
-
-		const db = client.db(dbName);
-
-		db.collection('convocatorias').insertOne(obj, (err, r) => {
-			if(err != null){
-				console.error(err.message);
-				res.statusCode(404);
-			}
-
-			res.json({'count':r.insertedCount});
-			client.close();
-		});
-	});
-});
-
-app.post('/convocatorias/cerrar/:idConvocatoria', (req, res) => {
-	
-	const _idConv = req.params.idConvocatoria;
-
-	client.connect((err, client) => {
-		assert.equal(null, err, err.message);
-
-		const db = client.db(dbName);
-
-		db.collection('convocatorias').findOneAndUpdate({_id:_idConv}, {$set:{'estado':'cerrada'}}, {returnOriginal:false}, (err, r) => {
-			if(err != null){
-				console.error(err.message);
-				res.statusCode(404);
-			}
-
-			res.json(r);
-			client.close();
-		});
-	});
-});
-
-app.post('/convocatorias/eliminar/:idConvocatoria', (req, res) => {
-	const _idConv = req.params.idConvocatoria;
-
-	client.connect((err, client) => {
-		assert.equal(null, err, err.message);
-
-		const db = client.db(dbName);
-
-		db.collection('convocatorias').findOneAndDelete({_id:_idConv}, {projection:{_id:1,usuarios:0}}, (err, r) => {
-			if(err != null){
-				console.error(err.message);
-				res.statusCode(404);
-			}
-
-			res.json(r);
-			client.close();
-		});
-	});
-});
-
-*/
-
-
-//Gestion de Noticias
-
-/*
-app.get('/noticias/todas', (req, res) => {
-
-});
-
-app.get('/noticias/categoria/:idCategoria', (req, res) => {
-
-});
-
-app.get('/noticias/fecha/:fechaNoticia', (req, res) => {
-
-});
-
-app.get('/noticias/rango/:fechaInicio/:fechaFinal', (req, res) => {
-
-});
-
-app.get('/noticias/:idNoticia', (req, res) => {
-	
-});
-
-app.post('/noticias/nuevo', (req, res) => {
-
-});
-
-app.post('/noticias/editar/:idNoticia', (req, res) => {
-	
-});
-
-app.post('/noticias/eliminar/:idNoticia', (req, res) => {
-	
-});
-
-*/
-
-
 //
 
 //Gestion de sectores y niveles educatvos
@@ -1951,6 +1695,113 @@ app.get('/nivelesacademicos/:id', (req, res) => {
 	});
 });
 
+
+app.post('/nivelesacademicos/nuevo', (req, res) => {
+
+	let obj = req.body.nivel;
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('nivelesacademicos').insertOne(obj, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.insertedCount});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+app.post('/nivelesacademicos/actualizar', (req, res) => {
+
+	let obj = req.body.nivel;
+	let oid = new ObjectId(obj._id);
+	
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('nivelesacademicos').updateOne({_id:oid}, {$set:{'descripcion':obj.descripcion,'siglas':obj.siglas}}, {upsert:false}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.modifiedCount});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+app.post('/nivelesacademicos/eliminar', (req, res) => {
+
+	const _id = req.body.nivel._id;
+	let oid = new ObjectId(_id);
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error('Error al conectar con MongoDb');
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+			db.collection('nivelesacademicos').deleteOne({_id:oid}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.deletedCount});
+
+			});
+
+		}catch(e){
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+		}
+
+	});
+
+});
+
+
 app.get('/sectores', (req, res) => {
 
 	client.connect((err, client) => {
@@ -2005,6 +1856,114 @@ app.get('/sectores/:id', (req, res) => {
 		}
 	});
 });
+
+
+app.post('/sectores/nuevo', (req, res) => {
+
+	let obj = req.body.sector;
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('sectores').insertOne(obj, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.insertedCount});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+app.post('/sectores/actualizar', (req, res) => {
+
+	let obj = req.body.sector;
+	let _id = obj._id;
+	let oid = new ObjectId(_id);
+	
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('sectores').updateOne({_id:oid}, {$set:{'descripcion':obj.descripcion,'descripcion_corta':obj.descripcion_corta}}, {upsert:false}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.modifiedCount});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+app.post('/sectores/eliminar', (req, res) => {
+
+	const _id = req.body.sector._id;
+	let oid = new ObjectId(_id);
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error('Error al conectar con MongoDb');
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+			db.collection('sectores').deleteOne({_id:oid}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.deletedCount});
+
+			});
+
+		}catch(e){
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+		}
+
+	});
+
+});
+
 
 app.get('/etnias', (req, res) => {
 	client.connect((err, client) => {
@@ -2063,7 +2022,113 @@ app.get('/etnias/:id', (req, res) => {
 	});
 });
 
+app.post('/etnias/nueva', (req, res) => {
+
+	let obj = req.body.etnia;
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('etnias').insertOne(obj, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.insertedCount});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+app.post('/etnias/:id/actualizar', (req, res) => {
+
+	let _id = req.params.id;
+	let oid = new ObjectId(_id);
+	let obj = req.body.etnia;
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('etnias').updateOne({_id:oid}, {$set:obj}, {upsert:false}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.modifiedCount});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+app.post('/etnias/eliminar', (req, res) => {
+
+	const _id = req.body.id;
+	let oid = new ObjectId(_id);
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error('Error al conectar con MongoDb');
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+			db.collection('etnias').deleteOne({_id:oid}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.deletedCount});
+
+			});
+
+		}catch(e){
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+		}
+
+	});
+
+});
+
 app.get('/categorias', (req, res) => {
+	
 	client.connect((err, client) => {
 		if(err){
 			console.error(err.message);
@@ -2120,19 +2185,630 @@ app.get('/categorias/:id', (req, res) => {
 	});
 });
 
+app.post('/categorias/nueva', (req, res) => {
+
+	let obj = req.body.categoria;
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('categorias').insertOne(obj, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.insertedCount});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+app.post('/categorias/actualizar', (req, res) => {
+	console.log('Actualizar Categoria');
+
+	let obj = req.body.categoria;
+	let oid = new ObjectId(obj._id);
+	console.log(oid);
+	//let oid = new ObjectId(_id);
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('categorias').updateOne({_id:oid}, {$set:{'descripcion':obj.descripcion, 'descripcion_corta':obj.descripcion_corta}}, {upsert:false}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.modifiedCount});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+app.post('/categorias/eliminar', (req, res) => {
+
+	const _id = req.body.categoria._id;
+	let oid = new ObjectId(_id);
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error('Error al conectar con MongoDb');
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+			db.collection('categorias').deleteOne({_id:oid}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.deletedCount});
+
+			});
+
+		}catch(e){
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+		}
+
+	});
+
+});
+
 //Gestión de publicidad
 
 
+app.get('/spots', (req, res) => {
+	client.connect((err, client) => {
+		if(err){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName)
+
+		try{
+			db.collection("spots").find({}).sort({'bloque':1}).toArray((err, docs) => {
+				if(err != null){
+					console.error(err.message);
+					res.statusCode(404);
+				}
+
+				res.json({'datos':docs});
+			});
+		}catch(e){
+			console.error("Excepcion: ".concat(e.message));
+			res.statusCode(404);
+		}
+
+	});
+});
+
+
+app.get('/spots/:id', (req, res) => {
+
+	const uid = req.params.id;
+	var o_id = new ObjectId(uid);
+
+	client.connect((err, client) => {
+		if(err){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName)
+
+		try{
+			db.collection("spots").findOne({_id:o_id}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.statusCode(404);
+				}
+
+				res.json({'dato':r});
+			});
+		}catch(e){
+			console.error("Excepcion: ".concat(e.message));
+			res.statusCode(404);
+		}
+
+	});
+});
+
+app.get('/spots/bloque/:idBloque', (req, res) => {
+
+	const bloque = req.params.idBloque;
+	//var o_id = new ObjectId(uid);
+
+	client.connect((err, client) => {
+		if(err){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName)
+
+		try{
+			db.collection("spots").findOne({'bloque':bloque}, (err, r) => {
+
+				if(err != null){
+					console.error(err.message);
+					res.statusCode(404);
+				}
+
+				res.json(r);
+			});
+		}catch(e){
+			console.error("Excepcion: ".concat(e.message));
+			res.statusCode(404);
+		}
+
+	});
+});
+
+app.post('/spots/nuevo', (req, res) => {
+
+	let obj = req.body.spot;
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('spots').insertOne(obj, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.insertedCount});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+app.post('/spots/actualizar', (req, res) => {
+
+	let obj = req.body.spot;
+	let _id = obj._id;
+	let oid = new ObjectId(_id);
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('spots').updateOne({_id:oid}, {$set:{'bloque':obj.bloque,'propietario':obj.propietario,'imagen':obj.imagen,'activado':obj.activado}}, {upsert:false}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.modifiedCount});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+app.post('/spots/eliminar', (req, res) => {
+
+	const _id = req.body.id;
+	let oid = new ObjectId(_id);
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error('Error al conectar con MongoDb');
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+			db.collection('spots').deleteOne({_id:oid}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.deletedCount});
+
+			});
+
+		}catch(e){
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+		}
+
+	});
+
+});
+
+
+app.get('/spots/img/:imagen', (req, res) => {
+
+	const dir = __dirname.concat(public_dir, 'img');
+	let fileName = req.params.imagen;
+
+	if(!fs.existsSync(dir)){
+		onsole.error('Acceso a directorio que no existe.');
+		res.sendStatus(404);
+	}else{
+		let fotoFile = dir.concat('/', fileName);
+		res.sendFile(fotoFile);
+	}
+
+});
+
+app.get('/spots/:bloque/img/:imagen', (req, res) => {
+
+	let bloque = req.params.bloque;
+	let fotoName = req.params.imagen;
+	let dir = __dirname.concat(public_dir, '/', bloque, '/img');
+	
+
+	if(!fs.existsSync(dir)){
+		console.error('Acceso a directorio que no existe.');
+		res.sendStatus(404);
+	}else{
+		let fotoFile = dir.concat('/', fotoName);
+		res.sendFile(fotoFile);
+	}
+
+});
+
+app.post('/spots/:bloque/img/upload', (req, res) => {
+	
+	let bloque = req.params.bloque;
+	let fotoFile = req.files.foto;
+	let fileName = fotoFile.name;
+
+	
+	let public_dirname = __dirname.concat(public_dir);
+	let seccion_img_dir = public_dirname.concat('/', bloque, '/img');
+	let fotoUrl = seccion_img_dir.concat('/', fileName)
+
+	if(!fs.existsSync(seccion_img_dir)){
+		fs.mkdir(seccion_img_dir, {recursive:true}, function(err) {
+			if(!err){
+				fs.appendFile(fotoUrl, fotoFile.data, function(error) {
+					if(!error){
+						res.json({'count':1});
+					}else{
+						console.error(error.message);
+						res.sendStatus(404);
+					}
+				});
+			}
+		})
+	}else{
+		fs.appendFile(fotoUrl, fotoFile.data, function(error) {
+			if(!error){
+				res.json({'count':1});
+			}else{
+				console.error(error.message);
+				res.sendStatus(404);
+			}
+		});
+	}
+
+});
+
+app.post('/spots/:bloque/img/delete', (req, res) => {
+	let bloque = req.params.bloque;
+	let fileName = req.body.foto;
+	let fileUrl = __dirname.concat(public_dir, '/', bloque, '/img/', fileName);
+	
+	if (fs.existsSync(fileUrl)) {
+		fs.unlink(fileUrl, function(err) {
+			if (!err) {
+				
+				res.json({'count':1});
+			}else{
+				console.error(error.message);
+				res.sendStatus(404);
+			}
+		})
+	}else{
+		console.error('Acceso a ruta no valida.');
+		res.sendStatus(404);
+	}
+});
+
 //Gestión de contenido de inicio
+
+app.get('/secciones', (req, res) => {
+	client.connect((err, client) => {
+		if(err){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName)
+
+		try{
+			db.collection("secciones").find({}).sort({'bloque':1}).toArray((err, docs) => {
+				if(err != null){
+					console.error(err.message);
+					res.statusCode(404);
+				}
+
+				res.json({'datos':docs});
+			});
+		}catch(e){
+			console.error("Excepcion: ".concat(e.message));
+			res.statusCode(404);
+		}
+
+	});
+});
+
+app.post('/secciones/nueva', (req, res) => {
+
+	let obj = req.body.seccion;
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('secciones').insertOne(obj, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.insertedCount});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+app.post('/secciones/:id/actualizar', (req, res) => {
+
+	let _uid = req.params.id;
+	let oid = new ObjectId(_uid);
+	let obj = req.body.seccion;
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error(err.message);
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+
+			db.collection('secciones').updateOne({_id:oid}, {$set:obj}, {upsert:false}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.modifiedCount});
+			});
+
+		}catch(e){
+
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+
+		}
+
+		
+	});
+
+});
+
+app.post('/secciones/eliminar', (req, res) => {
+
+	const _uid = req.body.uid;
+	let oid = new ObjectId(_uid);
+
+	client.connect((err, client) => {
+		if(err != null){
+			console.error('Error al conectar con MongoDb');
+			res.sendStatus(404);
+		}
+
+		const db = client.db(dbName);
+
+		try{
+			db.collection('secciones').deleteOne({_id:oid}, (err, r) => {
+				if(err != null){
+					console.error(err.message);
+					res.sendStatus(404);
+				}
+
+				res.json({'count':r.deletedCount});
+
+			});
+
+		}catch(e){
+			console.error("Excepcion: ".concat(e.message));
+			res.sendStatus(404);
+		}
+
+	});
+
+});
+
+app.get('/secciones/img/:imagen', (req, res) => {
+
+	const dir = __dirname.concat(public_dir, 'img');
+	let fileName = req.params.imagen;
+
+	if(!fs.existsSync(dir)){
+		onsole.error('Acceso a directorio que no existe.');
+		res.sendStatus(404);
+	}else{
+		let fotoFile = dir.concat('/', fileName);
+		res.sendFile(fotoFile);
+	}
+
+});
+
+app.get('/secciones/:id/img/:imagen', (req, res) => {
+
+	let _id = req.params.id;
+	let fotoName = req.params.imagen;
+	let dir = __dirname.concat(public_dir, '/', _id, '/img');
+	
+
+	if(!fs.existsSync(dir)){
+		console.error('Acceso a directorio que no existe.');
+		res.sendStatus(404);
+	}else{
+		let fotoFile = dir.concat('/', fotoName);
+		res.sendFile(fotoFile);
+	}
+
+});
+
+app.post('/secciones/:id/img/upload', (req, res) => {
+	
+	let seccionId = req.params.id;
+	let fotoFile = req.files.foto;
+	let fileName = fotoFile.name;
+
+	
+	let public_dirname = __dirname.concat(public_dir);
+	let seccion_img_dir = public_dirname.concat('/', seccionId, '/img');
+	let fotoUrl = seccion_img_dir.concat('/', fileName)
+
+	if(!fs.existsSync(seccion_img_dir)){
+		fs.mkdir(seccion_img_dir, {recursive:true}, function(err) {
+			if(!err){
+				fs.appendFile(fotoUrl, fotoFile.data, function(error) {
+					if(!error){
+						res.json({'count':1});
+					}else{
+						console.error(error.message);
+						res.sendStatus(404);
+					}
+				});
+			}
+		})
+	}else{
+		fs.appendFile(fotoUrl, fotoFile.data, function(error) {
+			if(!error){
+				res.json({'count':1});
+			}else{
+				console.error(error.message);
+				res.sendStatus(404);
+			}
+		});
+	}
+
+});
+
+app.post('/secciones/:id/img/delete', (req, res) => {
+	let _id = req.params.id;
+	let fileName = req.body.foto;
+	let fileUrl = __dirname.concat(public_dir, '/', _id, '/img/', fileName);
+	
+	if (fs.existsSync(fileUrl)) {
+		fs.unlink(fileUrl, function(err) {
+			if (!err) {
+				
+				res.json({'count':1});
+			}else{
+				console.error(error.message);
+				res.sendStatus(404);
+			}
+		})
+	}else{
+		console.error('Acceso a ruta no valida.');
+		res.sendStatus(404);
+	}
+});
+
 
 //Auditoria de usuarios
 
 app.post('/audit/', (req, res ) => {
-	console.log('Ejecuta audit');
 
 	const _uid = req.body.idUsuario;
 	const accion = req.body.accion;
-	console.log({'uid':_uid, 'accion':accion});
 
 	var date = new Date();
 	var fecha = date.toDateString();
@@ -2164,7 +2840,6 @@ app.post('/audit/', (req, res ) => {
 });
 
 app.get('/test', (req, res) => {
-	console.log('Hola Node');
 	res.send('Hola Node');
 });
 
