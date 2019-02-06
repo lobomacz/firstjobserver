@@ -8,7 +8,7 @@ const puerto = 3000;
 const fs = require('fs');
 const ObjectId = require('mongodb').ObjectId;
 
-var mw = require('./sessions/user-sessions.js');//Middlewear para verificación de token de sesion firebase.
+//var mw = require('./sessions/user-sessions.js');//Middlewear para verificación de token de sesion firebase.
 var users_dir = '/usuarios/';
 var employers_dir = '/empleadores/';
 var public_dir = '/publico/';
