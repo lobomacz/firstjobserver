@@ -37,10 +37,6 @@ node_modules/
 jspm_packages/
 
 #Private directories
-sessions/
-usuarios/
-publico/
-empleadores/
 
 # TypeScript v1 declaration files
 typings/
